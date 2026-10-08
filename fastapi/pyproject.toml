@@ -10,3 +10,8 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "httpx>=0.24"]
+
+# server.py and test_server.py sit side by side (flat layout); name the one
+# module to ship so setuptools does not refuse to guess.
+[tool.setuptools]
+py-modules = ["server"]
