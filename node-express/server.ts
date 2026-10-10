@@ -3,6 +3,7 @@
 //
 // Run: ABUNDERA_API_KEY=... ABUNDERA_WEBHOOK_SECRET=... npm start
 import express, { Request, Response } from "express";
+import rateLimit from "express-rate-limit";
 import { AbunderaQRProClient, verifyWebhookSignature } from "@abundera/qr-pro";
 
 const port = Number(process.env.PORT ?? 3000);
@@ -11,6 +12,12 @@ const webhookSecret = must("ABUNDERA_WEBHOOK_SECRET");
 
 const client = new AbunderaQRProClient({ apiKey });
 const app = express();
+
+// Cap requests per client before any route runs, so unauthenticated callers
+// cannot hammer the signature check or the API proxy routes.
+const RATE_WINDOW_MS = 60 * 1000;
+const RATE_MAX_REQUESTS = 120;
+app.use(rateLimit({ windowMs: RATE_WINDOW_MS, limit: RATE_MAX_REQUESTS }));
 
 // Parse JSON for normal routes, keep raw for the webhook.
 app.use("/webhook", express.raw({ type: "*/*" }));
